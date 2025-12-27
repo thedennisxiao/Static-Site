@@ -121,13 +121,13 @@ function buildBlogPosts() {
 // Build all pages
 function buildPages() {
   const pageFiles = fs.readdirSync(config.pagesDir)
-    .filter(file => file.endsWith('.md'));
+    .filter(file => file.endsWith('.md') && file !== 'index.md'); // Skip index.md - it's edited manually
   
   pageFiles.forEach(file => {
     const inputPath = path.join(config.pagesDir, file);
-    const outputName = file === 'index.md' ? 'index.html' : file.replace('.md', '.html');
+    const outputName = file.replace('.md', '.html');
     const outputPath = path.join(config.outputDir, outputName);
-    buildPage(inputPath, outputPath, file === 'index.md' ? 'home' : 'page');
+    buildPage(inputPath, outputPath, 'page');
   });
 }
 
