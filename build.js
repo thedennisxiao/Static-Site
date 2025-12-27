@@ -137,7 +137,7 @@ function buildBlogIndex() {
     
     blogListHtml += `
       <article class="blog-preview">
-        <h2><a href="/blog/${slug}.html">${title}</a></h2>
+        <h2><a href="${slug}.html">${title}</a></h2>
         ${dateHtml}
       </article>
     `;
