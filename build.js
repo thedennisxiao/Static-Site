@@ -137,7 +137,7 @@ function buildBlogIndex() {
     
     blogListHtml += `
       <article class="blog-preview">
-        <h2><a href="${slug}.html">${title}</a></h2>
+        <h2><a href="/blog/${slug}.html">${title}</a></h2>
         ${dateHtml}
       </article>
     `;
@@ -224,55 +224,6 @@ function copyAssets() {
   }
 }
 
-// Copy dist to docs folder for GitHub Pages
-function copyToDocs() {
-  const docsDir = './docs';
-  
-  // Remove existing docs folder contents
-  if (fs.existsSync(docsDir)) {
-    const copyRecursive = (src, dest) => {
-      const entries = fs.readdirSync(src, { withFileTypes: true });
-      entries.forEach(entry => {
-        const srcPath = path.join(src, entry.name);
-        const destPath = path.join(dest, entry.name);
-        
-        if (entry.isDirectory()) {
-          if (!fs.existsSync(destPath)) {
-            fs.mkdirSync(destPath, { recursive: true });
-          }
-          copyRecursive(srcPath, destPath);
-        } else {
-          fs.copyFileSync(srcPath, destPath);
-        }
-      });
-    };
-    
-    copyRecursive(config.outputDir, docsDir);
-    console.log('Copied to docs folder for GitHub Pages');
-  } else {
-    // Create docs folder and copy
-    fs.mkdirSync(docsDir, { recursive: true });
-    const copyRecursive = (src, dest) => {
-      const entries = fs.readdirSync(src, { withFileTypes: true });
-      entries.forEach(entry => {
-        const srcPath = path.join(src, entry.name);
-        const destPath = path.join(dest, entry.name);
-        
-        if (entry.isDirectory()) {
-          if (!fs.existsSync(destPath)) {
-            fs.mkdirSync(destPath, { recursive: true });
-          }
-          copyRecursive(srcPath, destPath);
-        } else {
-          fs.copyFileSync(srcPath, destPath);
-        }
-      });
-    };
-    
-    copyRecursive(config.outputDir, docsDir);
-    console.log('Copied to docs folder for GitHub Pages');
-  }
-}
 
 // Main build function
 function build() {
@@ -289,9 +240,47 @@ function build() {
   buildBlogIndex();
   buildBlogPosts();
   copyAssets();
-  copyToDocs();
+  copyToRoot();
   
   console.log('Build complete!');
+}
+
+// Copy dist to root for GitHub Pages (simpler than docs folder)
+function copyToRoot() {
+  const copyRecursive = (src, dest) => {
+    const entries = fs.readdirSync(src, { withFileTypes: true });
+    entries.forEach(entry => {
+      // Skip copying dist folder itself, node_modules, and source files
+      if (entry.name === 'dist' || entry.name === 'node_modules' || 
+          entry.name === 'content' || entry.name === 'templates' || 
+          entry.name === 'build.js' || entry.name === '.git' ||
+          entry.name === '.github' || entry.name === 'Site') {
+        return;
+      }
+      
+      const srcPath = path.join(src, entry.name);
+      const destPath = path.join(dest, entry.name);
+      
+      if (entry.isDirectory()) {
+        if (!fs.existsSync(destPath)) {
+          fs.mkdirSync(destPath, { recursive: true });
+        }
+        copyRecursive(srcPath, destPath);
+      } else {
+        // Only copy HTML, CSS, JS, and asset files
+        if (entry.name.endsWith('.html') || entry.name.endsWith('.css') || 
+            entry.name.endsWith('.js') || entry.name.endsWith('.png') ||
+            entry.name.endsWith('.jpg') || entry.name.endsWith('.svg') ||
+            entry.name.endsWith('.ico')) {
+          fs.copyFileSync(srcPath, destPath);
+        }
+      }
+    });
+  };
+  
+  // Copy dist contents to root
+  copyRecursive(config.outputDir, '.');
+  console.log('Copied built files to root for GitHub Pages');
 }
 
 build();

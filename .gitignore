@@ -1,4 +1,13 @@
 node_modules/
 *.log
 .DS_Store
+content/
+templates/
+build.js
+package.json
+package-lock.json
+README.md
+.gitignore
+.github/
+Site/
 
