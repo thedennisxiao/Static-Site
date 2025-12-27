@@ -224,6 +224,56 @@ function copyAssets() {
   }
 }
 
+// Copy dist to docs folder for GitHub Pages
+function copyToDocs() {
+  const docsDir = './docs';
+  
+  // Remove existing docs folder contents
+  if (fs.existsSync(docsDir)) {
+    const copyRecursive = (src, dest) => {
+      const entries = fs.readdirSync(src, { withFileTypes: true });
+      entries.forEach(entry => {
+        const srcPath = path.join(src, entry.name);
+        const destPath = path.join(dest, entry.name);
+        
+        if (entry.isDirectory()) {
+          if (!fs.existsSync(destPath)) {
+            fs.mkdirSync(destPath, { recursive: true });
+          }
+          copyRecursive(srcPath, destPath);
+        } else {
+          fs.copyFileSync(srcPath, destPath);
+        }
+      });
+    };
+    
+    copyRecursive(config.outputDir, docsDir);
+    console.log('Copied to docs folder for GitHub Pages');
+  } else {
+    // Create docs folder and copy
+    fs.mkdirSync(docsDir, { recursive: true });
+    const copyRecursive = (src, dest) => {
+      const entries = fs.readdirSync(src, { withFileTypes: true });
+      entries.forEach(entry => {
+        const srcPath = path.join(src, entry.name);
+        const destPath = path.join(dest, entry.name);
+        
+        if (entry.isDirectory()) {
+          if (!fs.existsSync(destPath)) {
+            fs.mkdirSync(destPath, { recursive: true });
+          }
+          copyRecursive(srcPath, destPath);
+        } else {
+          fs.copyFileSync(srcPath, destPath);
+        }
+      });
+    };
+    
+    copyRecursive(config.outputDir, docsDir);
+    console.log('Copied to docs folder for GitHub Pages');
+  }
+}
+
 // Main build function
 function build() {
   console.log('Building site...');
@@ -239,6 +289,7 @@ function build() {
   buildBlogIndex();
   buildBlogPosts();
   copyAssets();
+  copyToDocs();
   
   console.log('Build complete!');
 }
