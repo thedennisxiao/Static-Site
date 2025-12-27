@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Frequently Asked Questions - My Site</title>
+    <link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <a href="/" class="logo">My Site</a>
+            <ul class="nav-links">
+                <li><a href="/">Home</a></li>
+                <li><a href="/blog/">Blog</a></li>
+                <li><a href="/about.html">About</a></li>
+                <li><a href="/faq.html">FAQ</a></li>
+            </ul>
+        </div>
+    </nav>
+    
+    <main class="container">
+        <article class="content">
+            <h1>Frequently Asked Questions</h1>
+<h2>How do I add a new page?</h2>
+<ol>
+<li>Create a new <code>.md</code> file in the <code>content/pages</code> directory</li>
+<li>Run <code>npm run build</code> to generate the HTML</li>
+<li>The page will be available at <code>/filename.html</code></li>
+</ol>
+<h2>How do I add a blog post?</h2>
+<ol>
+<li>Create a new <code>.md</code> file in the <code>content/blog</code> directory</li>
+<li>Start with a title using <code># Title</code></li>
+<li>Optionally add a date line: <code>date: 2024-01-01</code></li>
+<li>Run <code>npm run build</code> to generate the HTML</li>
+<li>The post will be available at <code>/blog/filename.html</code></li>
+</ol>
+<h2>How do I customize the styling?</h2>
+<p>Edit the <code>assets/style.css</code> file. The styles are simple and easy to modify.</p>
+<h2>How do I change the site name?</h2>
+<p>Edit the templates in the <code>templates</code> directory and update the &quot;My Site&quot; text.</p>
+<h2>How do I run the site locally?</h2>
+<p>Run <code>npm run dev</code> to build and serve the site locally at <code>http://localhost:8000</code>.</p>
+
+        </article>
+    </main>
+    
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2024 My Site. All rights reserved.</p>
+        </div>
+    </footer>
+</body>
+</html>
+
