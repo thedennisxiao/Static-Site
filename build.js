@@ -24,24 +24,71 @@ function readTemplate(templateName) {
   );
 }
 
-// Process Markdown file
+// Process Markdown file and extract metadata
 function processMarkdown(filePath) {
-  const content = fs.readFileSync(filePath, 'utf-8');
-  return marked.parse(content);
+  let content = fs.readFileSync(filePath, 'utf-8');
+  
+  // Extract date from frontmatter (format: date: YYYY-MM-DD)
+  const dateMatch = content.match(/^date:\s*(.+)$/m);
+  let date = null;
+  let markdownContent = content;
+  
+  if (dateMatch) {
+    date = dateMatch[1].trim();
+    // Split into lines, remove the date line, then rejoin
+    const lines = content.split(/\r?\n/);
+    const dateLineIndex = lines.findIndex(line => /^date:\s*.+$/.test(line));
+    
+    if (dateLineIndex !== -1) {
+      // Remove the date line
+      lines.splice(dateLineIndex, 1);
+      // Remove any empty lines immediately after
+      while (dateLineIndex < lines.length && lines[dateLineIndex].trim() === '') {
+        lines.splice(dateLineIndex, 1);
+      }
+      markdownContent = lines.join('\n').trim();
+    }
+  }
+  
+  const htmlContent = marked.parse(markdownContent);
+  
+  return {
+    html: htmlContent,
+    date: date
+  };
 }
 
 // Build a page
 function buildPage(markdownFile, outputFile, template = 'page') {
-  const htmlContent = processMarkdown(markdownFile);
+  const { html: htmlContent, date } = processMarkdown(markdownFile);
   const templateContent = readTemplate(template);
   
   // Extract title from first h1 if available
   const titleMatch = htmlContent.match(/<h1[^>]*>(.*?)<\/h1>/);
   const pageTitle = titleMatch ? titleMatch[1] : 'Page';
   
-  const finalHtml = templateContent
+  // Format date for display
+  let dateHtml = '';
+  if (date) {
+    // Parse date string (YYYY-MM-DD) to avoid timezone issues
+    const [year, month, day] = date.split('-').map(Number);
+    const dateObj = new Date(year, month - 1, day);
+    const formattedDate = dateObj.toLocaleDateString('en-US', { 
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric' 
+    });
+    dateHtml = `<time class="blog-post-date" datetime="${date}">${formattedDate}</time>`;
+  }
+  
+  let finalHtml = templateContent
     .replace('{{TITLE}}', pageTitle)
     .replace('{{CONTENT}}', htmlContent);
+  
+  // Replace date placeholder if it exists, otherwise remove it
+  if (finalHtml.includes('{{DATE}}')) {
+    finalHtml = finalHtml.replace('{{DATE}}', dateHtml);
+  }
   
   fs.writeFileSync(outputFile, finalHtml, 'utf-8');
   console.log(`Built: ${outputFile}`);
@@ -67,23 +114,39 @@ function buildBlogIndex() {
     const dateMatch = content.match(/^date:\s*(.+)$/m);
     
     const title = titleMatch ? titleMatch[1] : file.replace('.md', '');
-    const date = dateMatch ? dateMatch[1] : '';
+    const date = dateMatch ? dateMatch[1].trim() : '';
     const slug = file.replace('.md', '');
+    
+    // Format date for display
+    let dateHtml = '';
+    if (date) {
+      try {
+        // Parse date string (YYYY-MM-DD) to avoid timezone issues
+        const [year, month, day] = date.split('-').map(Number);
+        const dateObj = new Date(year, month - 1, day);
+        const formattedDate = dateObj.toLocaleDateString('en-US', { 
+          year: 'numeric', 
+          month: 'long', 
+          day: 'numeric' 
+        });
+        dateHtml = `<time class="blog-date" datetime="${date}">${formattedDate}</time>`;
+      } catch (e) {
+        dateHtml = `<p class="blog-date">${date}</p>`;
+      }
+    }
     
     blogListHtml += `
       <article class="blog-preview">
         <h2><a href="/blog/${slug}.html">${title}</a></h2>
-        ${date ? `<p class="blog-date">${date}</p>` : ''}
+        ${dateHtml}
       </article>
     `;
   });
   
   blogListHtml += '</div>';
   
-  const templateContent = readTemplate('page');
-  const finalHtml = templateContent
-    .replace('{{TITLE}}', 'Blog')
-    .replace('{{CONTENT}}', blogListHtml);
+  const templateContent = readTemplate('blog-index');
+  const finalHtml = templateContent.replace('{{CONTENT}}', blogListHtml);
   
   const blogOutputDir = path.join(config.outputDir, 'blog');
   if (!fs.existsSync(blogOutputDir)) {
@@ -114,7 +177,7 @@ function buildBlogPosts() {
   blogFiles.forEach(file => {
     const inputPath = path.join(config.blogDir, file);
     const outputPath = path.join(config.outputDir, 'blog', file.replace('.md', '.html'));
-    buildPage(inputPath, outputPath, 'page');
+    buildPage(inputPath, outputPath, 'blog');
   });
 }
 
